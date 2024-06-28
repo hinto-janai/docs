@@ -55,7 +55,10 @@ jobs:
       uses: actions/configure-pages@v5
 
     - name: Build documentation
-      run: cargo doc --workspace --all-features --no-deps
+      run: cargo doc --workspace --all-features
+
+    - name: Copy index.html
+      run: cp index.html target/doc/
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
