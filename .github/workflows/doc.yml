@@ -1,6 +1,10 @@
 name: Deploy cargo doc to Pages
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -56,6 +60,37 @@ jobs:
 
     - name: Build documentation
       run: cargo doc --workspace --all-features
+
+    - name: index.html
+      run: |
+        echo '<h> Cuprate crate documentation. </h>' > target/doc/index.html
+        echo '<ul>' >> target/doc/index.html
+        echo '<li><a href="cuprate_address_book">cuprate_address_book</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_async_buffer">cuprate_async_buffer</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_blockchain">cuprate_blockchain</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_consensus">cuprate_consensus</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_consensus_rules">cuprate_consensus_rules</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_cryptonight">cuprate_cryptonight</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_dandelion_tower">cuprate_dandelion_tower</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_database">cuprate_database</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_epee_encoding">cuprate_epee_encoding</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_fast_sync">cuprate_fast_sync</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_fast_sync_create_hashes">cuprate_fast_sync_create_hashes</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_fixed_bytes">cuprate_fixed_bytes</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_helper">cuprate_helper</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_json_rpc">cuprate_json_rpc</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_levin">cuprate_levin</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_p2p">cuprate_p2p</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_p2p_core">cuprate_p2p_core</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_pruning">cuprate_pruning</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_rpc_interface">cuprate_rpc_interface</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_rpc_types">cuprate_rpc_types</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_test_utils">cuprate_test_utils</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_txpool">cuprate_txpool</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_types">cuprate_types</a></li>' >> target/doc/index.html
+        echo '<li><a href="cuprate_wire">cuprate_wire</a></li>' >> target/doc/index.html
+        echo '</ul>' >> target/doc/index.html
+        echo '</center>' >> target/doc/index.html
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
