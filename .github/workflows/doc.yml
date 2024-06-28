@@ -42,7 +42,6 @@ jobs:
     # https://github.com/monero-project/monero/blob/c444a7e002036e834bfb4c68f04a121ce1af5825/.github/workflows/build.yml#L71
 
     - name: Install dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
       run: sudo apt install -y libboost-dev
 
     - name: Checkout
