@@ -95,7 +95,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: Cuprate/cuprate
-      with:
         submodules: recursive
 
     - name: Setup Pages
