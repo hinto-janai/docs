@@ -1,0 +1,123 @@
+name: Deploy cargo doc to Pages
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  # Show colored output in CI.
+  CARGO_TERM_COLOR: always
+  # Show full panics.
+  RUST_BACKTRACE: "full"
+  # Increase thread stack size to 8 megabytes.
+  RUST_MIN_STACK: 8000000
+  # Fail on documentation warnings.
+  RUSTDOCFLAGS: '-D warnings'
+  # Enable debug information generation for build dependencies.
+  CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            shell: msys2 {0}
+            # GNU Windows is used as we need
+            # `unistd.h` and more in `cryptonight/`.
+            rust: stable-x86_64-pc-windows-gnu
+          - os: macos-latest
+            shell: bash
+            rust: stable
+          - os: ubuntu-latest
+            shell: bash
+            rust: stable
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: clippy
+
+    # Packages other than `Boost` used by `Monero` are listed here.
+    # https://github.com/monero-project/monero/blob/c444a7e002036e834bfb4c68f04a121ce1af5825/.github/workflows/build.yml#L71
+
+    - name: Install dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt install -y libboost-dev
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install boost
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        path-type: inherit
+        update: true
+        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-boost msys2-runtime-devel git mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+
+    # HACK: 2024-05-14
+    # GCC 14+ fails to build `lmdb-master-sys` with no clear error message:
+    # <https://github.com/Cuprate/cuprate/pull/127>
+    #
+    # - MSYS2 repos carry older versions of packages
+    # - pacman lets us manually downgrade from package files
+    # - Note that `gcc` requires `gcc-libs`
+    - name: Downgrade to GCC 13.2 (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-13.2.0-6-any.pkg.tar.zst https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-13.2.0-6-any.pkg.tar.zst
+        pacman -U --noconfirm mingw-w64-x86_64-gcc-13.2.0-6-any.pkg.tar.zst mingw-w64-x86_64-gcc-libs-13.2.0-6-any.pkg.tar.zst
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: Cuprate/cuprate
+      with:
+        submodules: recursive
+
+    - name: Setup Pages
+      id: pages
+      uses: actions/configure-pages@v5
+
+    - name: Build documentation
+      run: cargo doc --workspace --all-features --no-deps
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: target/doc/
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
