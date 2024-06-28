@@ -41,6 +41,7 @@ jobs:
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
+        targets: nightly-x86_64-unknown-linux-gnu
 
     # Packages other than `Boost` used by `Monero` are listed here.
     # https://github.com/monero-project/monero/blob/c444a7e002036e834bfb4c68f04a121ce1af5825/.github/workflows/build.yml#L71
